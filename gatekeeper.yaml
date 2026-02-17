@@ -1,0 +1,9 @@
+project: demo
+servers:
+  - name: git
+    package: "requests"
+    ecosystem: "PyPI"
+    version: "2.31.0"
+    capabilities: ["repo.read", "repo.write"]
+    auth:
+      required: false

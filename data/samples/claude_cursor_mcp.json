@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "sqlite-explorer": {
+      "command": "uvx",
+      "args": ["mcp-server-sqlite==0.1.2", "--db-path", "/tmp/demo.sqlite"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@0.6.2"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED"
+      }
+    },
+    "github-remote": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer REDACTED"
+      }
+    }
+  }
+}
