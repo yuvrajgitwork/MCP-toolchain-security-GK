@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MCPSEC_CONFIG: data/samples/mcp_real.json   # 👈 change if needed
+      MCPSEC_CONFIG: data/data/mcp_real.json   # 👈 change if needed
       MCPSEC_FORMAT: auto
       MCPSEC_FAIL_THRESHOLD: "30"
       MCPSEC_OUT_BEFORE: out_ci_before
