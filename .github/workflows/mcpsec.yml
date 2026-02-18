@@ -1,0 +1,91 @@
+name: MCPSEC Gatekeeper
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  mcpsec-scan:
+    runs-on: ubuntu-latest
+
+    env:
+      MCPSEC_CONFIG: data/samples/mcp_real.json   # 👈 change to your real config path
+      MCPSEC_FORMAT: auto
+      MCPSEC_FAIL_THRESHOLD: "30"
+      MCPSEC_OUT_BEFORE: out_ci_before
+      MCPSEC_OUT_APPLY: out_ci_apply
+      MCPSEC_OUT_AFTER: out_ci_after
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      # If your project needs any deps later, you can add them here.
+      # For now, this assumes your repo runs as-is.
+
+      - name: Scan (before hardening)
+        run: |
+          python -m mcpsec.cli scan \
+            --config "${MCPSEC_CONFIG}" \
+            --format "${MCPSEC_FORMAT}" \
+            --out "${MCPSEC_OUT_BEFORE}"
+
+      - name: Scan + Apply (generate hardened config)
+        run: |
+          python -m mcpsec.cli scan \
+            --config "${MCPSEC_CONFIG}" \
+            --format "${MCPSEC_FORMAT}" \
+            --apply \
+            --out "${MCPSEC_OUT_APPLY}"
+
+      - name: Scan (after hardening)
+        run: |
+          python -m mcpsec.cli scan \
+            --config "${MCPSEC_OUT_APPLY}/hardened_config.json" \
+            --format "${MCPSEC_FORMAT}" \
+            --out "${MCPSEC_OUT_AFTER}"
+
+      - name: Check final risk score
+        run: |
+          python - <<'PY'
+          import json, os, sys
+
+          path = os.path.join(os.environ["MCPSEC_OUT_AFTER"], "report.json")
+          with open(path, "r", encoding="utf-8") as f:
+              data = json.load(f)
+
+          score = int(data.get("risk_score", 0))
+          thresh = int(os.environ.get("MCPSEC_FAIL_THRESHOLD", "30"))
+
+          print(f"Final risk_score = {score}")
+          print(f"Fail threshold = {thresh}")
+
+          if score > thresh:
+              print("❌ FAIL: Risk score is above threshold")
+              sys.exit(1)
+          else:
+              print("✅ PASS: Risk score is within acceptable range")
+          PY
+
+      - name: Upload reports (before / apply / after)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcpsec-reports
+          path: |
+            out_ci_before/report.md
+            out_ci_before/report.json
+            out_ci_apply/report.md
+            out_ci_apply/report.json
+            out_ci_apply/hardened_config.json
+            out_ci_after/report.md
+            out_ci_after/report.json
