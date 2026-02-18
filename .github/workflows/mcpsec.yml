@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MCPSEC_CONFIG: data/samples/mcp_real.json   # 👈 change to your real config path
+      MCPSEC_CONFIG: data/samples/mcp_real.json   # 👈 change if needed
       MCPSEC_FORMAT: auto
       MCPSEC_FAIL_THRESHOLD: "30"
       MCPSEC_OUT_BEFORE: out_ci_before
@@ -29,30 +29,43 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      # If your project needs any deps later, you can add them here.
-      # For now, this assumes your repo runs as-is.
+      - name: Create output directories
+        run: |
+          mkdir -p "$MCPSEC_OUT_BEFORE"
+          mkdir -p "$MCPSEC_OUT_APPLY"
+          mkdir -p "$MCPSEC_OUT_AFTER"
 
       - name: Scan (before hardening)
         run: |
           python -m mcpsec.cli scan \
-            --config "${MCPSEC_CONFIG}" \
-            --format "${MCPSEC_FORMAT}" \
-            --out "${MCPSEC_OUT_BEFORE}"
+            --config "$MCPSEC_CONFIG" \
+            --format "$MCPSEC_FORMAT" \
+            --out "$MCPSEC_OUT_BEFORE"
 
       - name: Scan + Apply (generate hardened config)
         run: |
           python -m mcpsec.cli scan \
-            --config "${MCPSEC_CONFIG}" \
-            --format "${MCPSEC_FORMAT}" \
+            --config "$MCPSEC_CONFIG" \
+            --format "$MCPSEC_FORMAT" \
             --apply \
-            --out "${MCPSEC_OUT_APPLY}"
+            --out "$MCPSEC_OUT_APPLY"
 
       - name: Scan (after hardening)
         run: |
           python -m mcpsec.cli scan \
-            --config "${MCPSEC_OUT_APPLY}/hardened_config.json" \
-            --format "${MCPSEC_FORMAT}" \
-            --out "${MCPSEC_OUT_AFTER}"
+            --config "$MCPSEC_OUT_APPLY/hardened_config.json" \
+            --format "$MCPSEC_FORMAT" \
+            --out "$MCPSEC_OUT_AFTER"
+
+      - name: Debug: list output files
+        if: always()
+        run: |
+          echo "=== out_ci_before ==="
+          ls -la "$MCPSEC_OUT_BEFORE" || true
+          echo "=== out_ci_apply ==="
+          ls -la "$MCPSEC_OUT_APPLY" || true
+          echo "=== out_ci_after ==="
+          ls -la "$MCPSEC_OUT_AFTER" || true
 
       - name: Check final risk score
         run: |
@@ -60,6 +73,10 @@ jobs:
           import json, os, sys
 
           path = os.path.join(os.environ["MCPSEC_OUT_AFTER"], "report.json")
+          if not os.path.exists(path):
+              print("ERROR: report.json not found at", path)
+              sys.exit(1)
+
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
@@ -82,10 +99,6 @@ jobs:
         with:
           name: mcpsec-reports
           path: |
-            out_ci_before/report.md
-            out_ci_before/report.json
-            out_ci_apply/report.md
-            out_ci_apply/report.json
-            out_ci_apply/hardened_config.json
-            out_ci_after/report.md
-            out_ci_after/report.json
+            out_ci_before/
+            out_ci_apply/
+            out_ci_after/
