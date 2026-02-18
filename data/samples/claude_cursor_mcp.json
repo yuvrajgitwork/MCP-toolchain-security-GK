@@ -11,6 +11,10 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED"
       }
     },
+    "fs": {
+      "command": "npx",
+      "args": ["-y", "openssl@1.0.1"]
+    },
     "github-remote": {
       "url": "https://api.githubcopilot.com/mcp/",
       "headers": {

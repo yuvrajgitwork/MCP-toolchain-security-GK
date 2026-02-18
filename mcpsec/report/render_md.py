@@ -54,5 +54,19 @@ def render_markdown(report: Dict[str, Any]) -> str:
             ids = ", ".join([i for i in (row.get("vuln_ids") or []) if i])
             lines.append(f"| {row.get('server')} | {row.get('package')} | {row.get('vuln_count')} | {ids} |")
         lines.append("")
+        
+    probes = report.get("probes", {})
+    if probes:
+        lines.append("\n## LLM Probe Suggestions\n")
+        for server, items in probes.items():
+            lines.append(f"\n### {server}\n")
+            for p in items[:7]:
+                lines.append(f"- {p}")
 
+    summary = report.get("intel_summary", {})
+    lines.append("## Intelligence Summary\n")
+    lines.append(f"- OSV: {summary.get('osv_queries',0)} queries, {summary.get('osv_hits',0)} with hits")
+    lines.append(f"- GitHub Advisories: {summary.get('ghsa_queries',0)} queries, {summary.get('ghsa_hits',0)} with hits")
+    lines.append(f"- NVD (CVE): {summary.get('nvd_queries',0)} queries, {summary.get('nvd_hits',0)} with hits\n")
+    
     return "\n".join(lines)

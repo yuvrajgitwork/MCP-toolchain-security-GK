@@ -1,0 +1,82 @@
+{
+  "mcpServers": {
+    "fs_read": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "auth": {
+        "required": true
+      },
+      "capabilities": [
+        "fs.read"
+      ]
+    },
+    "fs_write": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem"
+      ],
+      "auth": {
+        "required": true
+      },
+      "capabilities": [
+        "fs.write"
+      ]
+    },
+    "sqlite_read": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-sqlite"
+      ],
+      "auth": {
+        "required": true
+      },
+      "capabilities": [
+        "db.read"
+      ]
+    },
+    "sqlite_write": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-sqlite"
+      ],
+      "auth": {
+        "required": true
+      },
+      "capabilities": [
+        "db.write"
+      ]
+    },
+    "github_read": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED"
+      },
+      "capabilities": [
+        "repo.read"
+      ]
+    },
+    "github_write": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REDACTED"
+      },
+      "capabilities": [
+        "repo.write"
+      ]
+    }
+  }
+}

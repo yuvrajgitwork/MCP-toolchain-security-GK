@@ -105,8 +105,8 @@ def load_mcpservers_config(path: str) -> Dict[str, Any]:
                 "package": None,
                 "version": None,
                 "ecosystem": None,
-                "capabilities": [],
-                "auth": {"required": bool(auth_required)},
+                "capabilities": cfg.get("capabilities", []) or [],
+                "auth": cfg.get("auth") or {"required": bool(auth_required)},
             })
             continue
 
@@ -132,8 +132,8 @@ def load_mcpservers_config(path: str) -> Dict[str, Any]:
             "package": pkg,
             "version": ver if ver else ("un-pinned" if pkg else None),
             "ecosystem": eco,
-            "capabilities": [],
-            "auth": {"required": bool(auth_required)},
+            "capabilities": cfg.get("capabilities", []) or [],
+            "auth": cfg.get("auth") or {"required": bool(auth_required)},
         })
 
     return {"project": p.name, "servers": servers_out}
