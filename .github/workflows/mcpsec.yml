@@ -29,8 +29,12 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      # No requirements.txt in your repo, so we don't install anything.
-      # Your project is pure-python and should run from source.
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      
 
       - name: Create output directories
         run: |
