@@ -1,0 +1,102 @@
+name: "MCPSEC Gatekeeper"
+description: "Scan MCP configs, generate hardening plan, apply it, rescan, and gate PRs on risk score."
+author: "yuvrajgitwork"
+
+inputs:
+  config:
+    description: "Path to MCP config file in the repo"
+    required: true
+  format:
+    description: "Config format: auto|gatekeeper|vscode|mcpservers"
+    required: false
+    default: "auto"
+  threshold:
+    description: "Fail if AFTER risk_score is greater than this"
+    required: false
+    default: "30"
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.12"
+  out-before:
+    description: "Output dir for before scan"
+    required: false
+    default: "out_ci_before"
+  out-apply:
+    description: "Output dir for apply step"
+    required: false
+    default: "out_ci_apply"
+  out-after:
+    description: "Output dir for after scan"
+    required: false
+    default: "out_ci_after"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then
+          pip install -r requirements.txt
+        else
+          pip install requests PyYAML
+        fi
+
+    - name: Create output directories
+      shell: bash
+      run: |
+        mkdir -p "${{ inputs.out-before }}" "${{ inputs.out-apply }}" "${{ inputs.out-after }}"
+
+    - name: Scan (before)
+      shell: bash
+      run: |
+        python -m mcpsec.cli scan \
+          --config "${{ inputs.config }}" \
+          --format "${{ inputs.format }}" \
+          --out "${{ inputs.out-before }}"
+
+    - name: Scan + Apply (generate hardened config)
+      shell: bash
+      run: |
+        python -m mcpsec.cli scan \
+          --config "${{ inputs.config }}" \
+          --format "${{ inputs.format }}" \
+          --apply \
+          --out "${{ inputs.out-apply }}"
+
+    - name: Rescan (after)
+      shell: bash
+      run: |
+        python -m mcpsec.cli scan \
+          --config "${{ inputs.out-apply }}/hardened_config.json" \
+          --format "${{ inputs.format }}" \
+          --out "${{ inputs.out-after }}"
+
+    - name: Gate on final risk score
+      shell: bash
+      run: |
+        python - <<'PY'
+        import json, sys
+        from pathlib import Path
+
+        after = Path("${{ inputs.out-after }}") / "report.json"
+        data = json.loads(after.read_text(encoding="utf-8"))
+        score = int(data.get("risk_score", 0))
+        thresh = int("${{ inputs.threshold }}")
+
+        print(f"Final risk_score = {score}")
+        print(f"Fail threshold = {thresh}")
+
+        if score > thresh:
+            print("❌ FAIL: after risk_score above threshold")
+            sys.exit(1)
+
+        print("✅ PASS")
+        PY
