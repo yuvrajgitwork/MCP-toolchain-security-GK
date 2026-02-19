@@ -48,6 +48,8 @@ jobs:
             --out "$MCPSEC_OUT_BEFORE"
 
       - name: Scan + Apply (generate hardened config)
+        env:
+          MCPSEC_LLM_TOKEN: ${{ secrets.MCPSEC_LLM_TOKEN }}
         run: |
           python -m mcpsec.cli scan \
             --config "$MCPSEC_CONFIG" \
@@ -56,6 +58,8 @@ jobs:
             --out "$MCPSEC_OUT_APPLY"
 
       - name: Rescan (after hardening)
+        env:          # Ensure the hardened config path is available to this step
+          MCPSEC_LLM_TOKEN: ${{ secrets.MCPSEC_LLM_TOKEN }}
         run: |
           python -m mcpsec.cli scan \
             --config "$MCPSEC_OUT_APPLY/hardened_config.json" \

@@ -70,7 +70,7 @@ class PolicyAgent:
 
     def __init__(self, cfg: Optional[PolicyAgentConfig] = None, token_env: str = "GITHUB_PAT"):
         self.cfg = cfg or PolicyAgentConfig()
-        self.token = os.getenv(token_env) or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT")
+        self.token = os.getenv(token_env) or os.getenv("MCPSEC_LLM_TOKEN") or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT")
         if not self.token:
             raise RuntimeError("PolicyAgent requires GITHUB_PAT (recommended) or GITHUB_TOKEN.")
 

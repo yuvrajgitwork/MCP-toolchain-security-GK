@@ -51,13 +51,13 @@ def compute_findings(config: dict, replay: bool = False) -> dict:
     probes = {}
     probe_agent = None
 
-    if os.getenv("GITHUB_PAT") or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT"):
+    if os.getenv("GITHUB_PAT") or os.getenv("GITHUB_TOKEN") or  os.getenv("MCPSEC_LLM_TOKEN") or os.getenv("GH_PAT"):
         probe_agent = ProbeAgent(ProbeAgentConfig(probes_per_server=7))
     
     policy = None
     policy_agent = None
 
-    if os.getenv("GITHUB_PAT") or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT"):
+    if os.getenv("GITHUB_PAT") or os.getenv("GITHUB_TOKEN") or  os.getenv("MCPSEC_LLM_TOKEN") or os.getenv("GH_PAT"):
         policy_agent = PolicyAgent(PolicyAgentConfig())
         
     for s in servers:

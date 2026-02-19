@@ -86,7 +86,7 @@ class ProbeAgent:
     def __init__(self, cfg: Optional[ProbeAgentConfig] = None, token_env: str = "GITHUB_PAT"):
         self.cfg = cfg or ProbeAgentConfig()
         # Prefer PAT; allow GITHUB_TOKEN too
-        self.token = os.getenv(token_env) or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT")
+        self.token = os.getenv(token_env) or os.getenv("MCPSEC_LLM_TOKEN") or os.getenv("GITHUB_TOKEN") or os.getenv("GH_PAT")
         if not self.token:
             raise RuntimeError(
                 "ProbeAgent requires a GitHub token. Set GITHUB_PAT (recommended) or GITHUB_TOKEN."
