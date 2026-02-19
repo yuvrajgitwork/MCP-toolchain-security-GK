@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      MCPSEC_CONFIG: data/data/mcp_real.json   # 👈 change if needed
+      MCPSEC_CONFIG: data/real/mcp_real.json   # ✅ matches your repo
       MCPSEC_FORMAT: auto
-      MCPSEC_FAIL_THRESHOLD: "30"
+      MCPSEC_FAIL_THRESHOLD: "30"              # fail if AFTER score > 30
       MCPSEC_OUT_BEFORE: out_ci_before
       MCPSEC_OUT_APPLY: out_ci_apply
       MCPSEC_OUT_AFTER: out_ci_after
@@ -29,11 +29,12 @@ jobs:
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
+      # No requirements.txt in your repo, so we don't install anything.
+      # Your project is pure-python and should run from source.
+
       - name: Create output directories
         run: |
-          mkdir -p "$MCPSEC_OUT_BEFORE"
-          mkdir -p "$MCPSEC_OUT_APPLY"
-          mkdir -p "$MCPSEC_OUT_AFTER"
+          mkdir -p "$MCPSEC_OUT_BEFORE" "$MCPSEC_OUT_APPLY" "$MCPSEC_OUT_AFTER"
 
       - name: Scan (before hardening)
         run: |
@@ -50,33 +51,18 @@ jobs:
             --apply \
             --out "$MCPSEC_OUT_APPLY"
 
-      - name: Scan (after hardening)
+      - name: Rescan (after hardening)
         run: |
           python -m mcpsec.cli scan \
             --config "$MCPSEC_OUT_APPLY/hardened_config.json" \
             --format "$MCPSEC_FORMAT" \
             --out "$MCPSEC_OUT_AFTER"
 
-      - name: Debug: list output files
-        if: always()
-        run: |
-          echo "=== out_ci_before ==="
-          ls -la "$MCPSEC_OUT_BEFORE" || true
-          echo "=== out_ci_apply ==="
-          ls -la "$MCPSEC_OUT_APPLY" || true
-          echo "=== out_ci_after ==="
-          ls -la "$MCPSEC_OUT_AFTER" || true
-
       - name: Check final risk score
         run: |
           python - <<'PY'
           import json, os, sys
-
           path = os.path.join(os.environ["MCPSEC_OUT_AFTER"], "report.json")
-          if not os.path.exists(path):
-              print("ERROR: report.json not found at", path)
-              sys.exit(1)
-
           with open(path, "r", encoding="utf-8") as f:
               data = json.load(f)
 
@@ -89,8 +75,8 @@ jobs:
           if score > thresh:
               print("❌ FAIL: Risk score is above threshold")
               sys.exit(1)
-          else:
-              print("✅ PASS: Risk score is within acceptable range")
+
+          print("✅ PASS: Risk score is within acceptable range")
           PY
 
       - name: Upload reports (before / apply / after)
